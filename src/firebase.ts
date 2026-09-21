@@ -26,12 +26,12 @@ export type CloudGameState = {
 };
 
 const config = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyCDb1OYRwNbRH5Xzq6nfThN0s9X0ISdYI4',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'pokemon-expedition-idle.firebaseapp.com',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'pokemon-expedition-idle',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'pokemon-expedition-idle.firebasestorage.app',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '279783792378',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:279783792378:web:419c995eb89f6f011af343',
 };
 
 export const firebaseConfigured = Object.values(config).every(Boolean);
@@ -74,4 +74,3 @@ export async function saveCloudGame(user: User, state: CloudGameState) {
     updatedAt: serverTimestamp(),
   }, { merge: true });
 }
-
