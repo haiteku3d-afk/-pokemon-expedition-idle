@@ -16,6 +16,18 @@ export type Zone = {
   y: number;
 };
 
+export type Mission = {
+  id: number;
+  zoneId: string;
+  title: string;
+  kind: string;
+  durationSeconds: number;
+  power: number;
+  rewardLabel: string;
+  rewards: { coins: number; stones?: number; basicPacks?: number };
+  production: number;
+};
+
 export const zones: Zone[] = [
   { id: 'viridian-forest', shortName: 'Bosque', name: 'Bosque Verde', subtitle: 'Ruta 1 · Ciudad Plateada', gym: 'Gimnasio Roca', badge: 'Roca', type: 'ROCA', production: 5, requiredPower: 0, progress: 42, status: 'in-progress', x: 18, y: 78 },
   { id: 'mt-moon', shortName: 'Monte Moon', name: 'Monte Moon', subtitle: 'Ciudad Celeste', gym: 'Gimnasio Agua', badge: 'Agua', type: 'AGUA', production: 12, requiredPower: 120, progress: 0, status: 'locked', x: 37, y: 61 },
@@ -28,11 +40,11 @@ export const zones: Zone[] = [
   { id: 'league', shortName: 'Liga', name: 'Liga Pokémon', subtitle: 'Calle Victoria', gym: 'Alto Mando', badge: 'Campeón', type: 'FINAL', production: 0, requiredPower: 2500, progress: 0, status: 'locked', x: 24, y: 38 },
 ];
 
-export const missions = [
-  { id: 1, title: 'Explorar la Ruta 1', kind: 'EXPLORACIÓN', duration: '1 min', power: 10, reward: '50 monedas', state: 'completed' },
-  { id: 2, title: 'Encontrar al Pokémon perdido', kind: 'CAPTURA', duration: '3 min', power: 20, reward: 'Sobre básico', state: 'available' },
-  { id: 3, title: 'Entrenadores del bosque', kind: 'COMBATE', duration: '5 min', power: 35, reward: '200 monedas + piedra', state: 'locked' },
-  { id: 4, title: 'Llegar a Ciudad Plateada', kind: 'HISTORIA', duration: '10 min', power: 50, reward: 'Acceso al gimnasio', state: 'locked' },
+export const missions: Mission[] = [
+  { id: 1, zoneId: 'viridian-forest', title: 'Explorar la Ruta 1', kind: 'EXPLORACIÓN', durationSeconds: 30, power: 10, rewardLabel: '50 monedas', rewards: { coins: 50 }, production: 1 },
+  { id: 2, zoneId: 'viridian-forest', title: 'Encontrar al Pokémon perdido', kind: 'CAPTURA', durationSeconds: 60, power: 20, rewardLabel: 'Sobre básico', rewards: { coins: 75, basicPacks: 1 }, production: 1 },
+  { id: 3, zoneId: 'viridian-forest', title: 'Entrenadores del bosque', kind: 'COMBATE', durationSeconds: 120, power: 35, rewardLabel: '200 monedas + piedra', rewards: { coins: 200, stones: 1 }, production: 1 },
+  { id: 4, zoneId: 'viridian-forest', title: 'Llegar a Ciudad Plateada', kind: 'HISTORIA', durationSeconds: 180, power: 50, rewardLabel: 'Acceso al gimnasio', rewards: { coins: 300 }, production: 2 },
 ];
 
 export const pokemon = [

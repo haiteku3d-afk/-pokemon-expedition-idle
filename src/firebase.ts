@@ -11,18 +11,16 @@ import {
   doc,
   getDoc,
   getFirestore,
+  runTransaction,
   serverTimestamp,
-  setDoc,
   type Firestore,
 } from 'firebase/firestore';
+import { GAME_STATE_VERSION, migrateGameState, type GameState } from './gameEngine';
 
-export type CloudGameState = {
-  coins: number;
-  stones: number;
-  starterId: number;
-  cards: Record<string, { copies: number; level: number }>;
-  lastActiveAt?: number;
-  updatedAt?: unknown;
+export type LoadedCloudGame = {
+  state: GameState;
+  revision: number;
+  updatedAtMs: number | null;
 };
 
 const config = {
@@ -59,18 +57,35 @@ export async function logoutFromGoogle() {
   if (auth) await signOut(auth);
 }
 
-export async function loadCloudGame(user: User): Promise<CloudGameState | null> {
+export async function loadCloudGame(user: User): Promise<LoadedCloudGame | null> {
   if (!database) throw new Error('Firestore no está configurado.');
   const snapshot = await getDoc(doc(database, 'players', user.uid));
-  return snapshot.exists() ? snapshot.data() as CloudGameState : null;
+  if (!snapshot.exists()) return null;
+  const data = snapshot.data();
+  return {
+    state: migrateGameState(data.state ?? data),
+    revision: typeof data.revision === 'number' ? data.revision : 0,
+    updatedAtMs: typeof data.updatedAtMs === 'number' ? data.updatedAtMs : null,
+  };
 }
 
-export async function saveCloudGame(user: User, state: CloudGameState) {
+export async function saveCloudGame(user: User, state: GameState, expectedRevision: number) {
   if (!database) throw new Error('Firestore no está configurado.');
-  await setDoc(doc(database, 'players', user.uid), {
-    ...state,
-    email: user.email,
-    lastActiveAt: Date.now(),
-    updatedAt: serverTimestamp(),
-  }, { merge: true });
+  const reference = doc(database, 'players', user.uid);
+  return runTransaction(database, async (transaction) => {
+    const snapshot = await transaction.get(reference);
+    const remoteRevision = snapshot.exists() && typeof snapshot.data().revision === 'number' ? snapshot.data().revision : 0;
+    if (remoteRevision !== expectedRevision) throw new Error('CLOUD_SAVE_CONFLICT');
+    const savedAt = Date.now();
+    const revision = remoteRevision + 1;
+    transaction.set(reference, {
+      schemaVersion: GAME_STATE_VERSION,
+      state: { ...state, schemaVersion: GAME_STATE_VERSION, lastActiveAt: savedAt },
+      revision,
+      email: user.email,
+      updatedAtMs: savedAt,
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
+    return { revision, savedAt };
+  });
 }
