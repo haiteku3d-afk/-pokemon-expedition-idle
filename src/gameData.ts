@@ -36,18 +36,18 @@ export const missions = [
 ];
 
 export const pokemon = [
-  { id: 7, name: 'Squirtle', type: 'Agua', level: 8, power: 42, rarity: 'Poco común', color: '#38bdf8' },
-  { id: 25, name: 'Pikachu', type: 'Eléctrico', level: 6, power: 34, rarity: 'Poco común', color: '#facc15' },
-  { id: 1, name: 'Bulbasaur', type: 'Planta', level: 5, power: 29, rarity: 'Poco común', color: '#4ade80' },
-  { id: 4, name: 'Charmander', type: 'Fuego', level: 4, power: 27, rarity: 'Poco común', color: '#fb923c' },
-  { id: 133, name: 'Eevee', type: 'Normal', level: 5, power: 24, rarity: 'Poco común', color: '#d6a56f' },
-  { id: 16, name: 'Pidgey', type: 'Volador', level: 3, power: 20, rarity: 'Común', color: '#cbd5e1' },
-  { id: 10, name: 'Caterpie', type: 'Bicho', level: 2, power: 14, rarity: 'Común', color: '#86efac' },
-  { id: 129, name: 'Magikarp', type: 'Agua', level: 1, power: 10, rarity: 'Común', color: '#f87171' },
+  { id: 7, name: 'Squirtle', type: 'Agua', level: 8, power: 42, rarity: 'Poco común', color: '#38bdf8', image: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png' },
+  { id: 25, name: 'Pikachu', type: 'Eléctrico', level: 6, power: 34, rarity: 'Poco común', color: '#facc15', image: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png' },
+  { id: 1, name: 'Bulbasaur', type: 'Planta', level: 5, power: 29, rarity: 'Poco común', color: '#4ade80', image: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png' },
+  { id: 4, name: 'Charmander', type: 'Fuego', level: 4, power: 27, rarity: 'Poco común', color: '#fb923c', image: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/4.png' },
+  { id: 133, name: 'Eevee', type: 'Normal', level: 5, power: 24, rarity: 'Poco común', color: '#d6a56f', image: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/133.png' },
+  { id: 16, name: 'Pidgey', type: 'Volador', level: 3, power: 20, rarity: 'Común', color: '#cbd5e1', image: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/16.png' },
+  { id: 10, name: 'Caterpie', type: 'Bicho', level: 2, power: 14, rarity: 'Común', color: '#86efac', image: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/10.png' },
+  { id: 129, name: 'Magikarp', type: 'Agua', level: 1, power: 10, rarity: 'Común', color: '#f87171', image: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/129.png' },
 ];
 
 export const packs = [
-  { id: 'basic', name: 'Sobre Básico', eyebrow: 'EXPEDICIÓN', price: 100, className: 'pack-basic', guarantee: '60% carta común', description: 'El comienzo de toda aventura.' },
-  { id: 'advanced', name: 'Sobre Avanzado', eyebrow: 'DESCUBRIMIENTO', price: 500, className: 'pack-advanced', guarantee: '1 rara o superior', description: 'Encuentros para equipos en crecimiento.' },
-  { id: 'elite', name: 'Sobre Élite', eyebrow: 'LEGENDARIO', price: 1500, className: 'pack-elite', guarantee: '1 épica o superior', description: 'Las cartas más difíciles de encontrar.' },
+  { id: 'basic', name: 'Sobre Básico', eyebrow: 'EXPEDICIÓN', price: 100, className: 'pack-basic', featuredPokemonId: 1, guarantee: '60% carta común', description: 'El comienzo de toda aventura.' },
+  { id: 'advanced', name: 'Sobre Avanzado', eyebrow: 'DESCUBRIMIENTO', price: 500, className: 'pack-advanced', featuredPokemonId: 25, guarantee: '1 rara o superior', description: 'Encuentros para equipos en crecimiento.' },
+  { id: 'elite', name: 'Sobre Élite', eyebrow: 'LEGENDARIO', price: 1500, className: 'pack-elite', featuredPokemonId: 133, guarantee: '1 épica o superior', description: 'Las cartas más difíciles de encontrar.' },
 ];
