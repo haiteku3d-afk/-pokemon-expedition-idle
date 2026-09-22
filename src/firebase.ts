@@ -9,12 +9,11 @@ import {
 } from 'firebase/auth';
 import {
   doc,
+  getDoc,
   getFirestore,
-  onSnapshot,
   serverTimestamp,
   setDoc,
   type Firestore,
-  type Unsubscribe,
 } from 'firebase/firestore';
 
 export type CloudGameState = {
@@ -22,6 +21,7 @@ export type CloudGameState = {
   stones: number;
   starterId: number;
   cards: Record<string, { copies: number; level: number }>;
+  lastActiveAt?: number;
   updatedAt?: unknown;
 };
 
@@ -59,11 +59,10 @@ export async function logoutFromGoogle() {
   if (auth) await signOut(auth);
 }
 
-export function watchCloudGame(user: User, callback: (state: CloudGameState | null) => void): Unsubscribe {
-  if (!database) return () => undefined;
-  return onSnapshot(doc(database, 'players', user.uid), (snapshot) => {
-    callback(snapshot.exists() ? snapshot.data() as CloudGameState : null);
-  });
+export async function loadCloudGame(user: User): Promise<CloudGameState | null> {
+  if (!database) throw new Error('Firestore no está configurado.');
+  const snapshot = await getDoc(doc(database, 'players', user.uid));
+  return snapshot.exists() ? snapshot.data() as CloudGameState : null;
 }
 
 export async function saveCloudGame(user: User, state: CloudGameState) {
@@ -71,6 +70,7 @@ export async function saveCloudGame(user: User, state: CloudGameState) {
   await setDoc(doc(database, 'players', user.uid), {
     ...state,
     email: user.email,
+    lastActiveAt: Date.now(),
     updatedAt: serverTimestamp(),
   }, { merge: true });
 }
