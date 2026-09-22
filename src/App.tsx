@@ -112,20 +112,25 @@ function App() {
     if (!user || !cloudReady) return;
     const snapshot = game;
     const timer = window.setTimeout(() => {
-      saveQueue.current = saveQueue.current.then(async () => {
-        setCloudStatus('loading');
-        try {
-          const result = await saveCloudGame(user, snapshot, revision.current);
-          revision.current = result.revision;
-          setLastSync(result.savedAt);
-          setCloudStatus('saved');
-        } catch (error) {
-          setCloudStatus(error instanceof Error && error.message === 'CLOUD_SAVE_CONFLICT' ? 'conflict' : 'error');
-        }
-      });
-    }, 650);
+      queueCloudSave(snapshot);
+    }, 300);
     return () => window.clearTimeout(timer);
   }, [cloudReady, game, user]);
+
+  const queueCloudSave = (snapshot: GameState) => {
+    if (!user || !cloudReady) return;
+    saveQueue.current = saveQueue.current.then(async () => {
+      setCloudStatus('loading');
+      try {
+        const result = await saveCloudGame(user, snapshot, revision.current);
+        revision.current = result.revision;
+        setLastSync(result.savedAt);
+        setCloudStatus('saved');
+      } catch (error) {
+        setCloudStatus(error instanceof Error && error.message === 'CLOUD_SAVE_CONFLICT' ? 'conflict' : 'error');
+      }
+    });
+  };
 
   const openGoogleLogin = () => {
     if (!firebaseConfigured) return;
@@ -161,16 +166,21 @@ function App() {
   };
 
   const acceptPack = () => {
+    const pack = packs.find((item) => item.id === openingPack);
+    if (!pack || game.coins < pack.price) {
+      setOpeningPack(null);
+      return;
+    }
     const pulled = pokemon.slice(0, 5);
-    setGame((state) => {
-      const cards = { ...state.cards };
-      pulled.forEach((entry) => {
-        const old = cards[String(entry.id)] ?? { copies: 0, level: 1 };
-        const copies = old.copies + 1;
-        cards[String(entry.id)] = { copies, level: Math.max(old.level, 1 + Math.floor(copies / 3)) };
-      });
-      return { ...state, cards };
+    const cards = { ...game.cards };
+    pulled.forEach((entry) => {
+      const old = cards[String(entry.id)] ?? { copies: 0, level: 1 };
+      const copies = old.copies + 1;
+      cards[String(entry.id)] = { copies, level: Math.max(old.level, 1 + Math.floor(copies / 3)) };
     });
+    const nextGame = { ...game, coins: game.coins - pack.price, cards, lastActiveAt: Date.now() };
+    setGame(nextGame);
+    queueCloudSave(nextGame);
     setOpeningPack(null);
   };
 
@@ -178,7 +188,6 @@ function App() {
     if (view === 'map') return <MapView game={game} now={now} teamPower={teamPower} selected={selectedZone} onSelect={setSelectedZone} onMissionAction={handleMissionAction} />;
     if (view === 'packs') return <PacksView coins={game.coins} onOpen={(packId, price) => {
       if (game.coins < price) return;
-      setGame((state) => ({ ...state, coins: state.coins - price }));
       setOpeningPack(packId);
     }} />;
     if (view === 'pokedex') return <PokedexView cards={game.cards} />;

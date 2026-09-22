@@ -225,7 +225,13 @@ p { color: var(--muted); line-height: 1.55; }
 
 @media (max-width: 560px) {
   .brand-copy strong { font-size: 13px; }
-  .wallet { display: none; }
+  .topbar { height: 62px; }
+  .brand-mark { width: 34px; height: 34px; border-radius: 10px; font-size: 12px; }
+  .brand-copy { display: none; }
+  .cloud-state { margin-left: 0; max-width: 118px; overflow: hidden; text-overflow: ellipsis; }
+  .wallet { display: flex; margin-left: auto; }
+  .wallet span { display: none; }
+  .wallet span:first-child { display: inline-flex; align-items: center; min-height: 34px; padding: 6px 9px; font-size: 12px; white-space: nowrap; }
   .avatar { display: none; }
   .hero-landscape { min-height: 150px; }
   .partner-orb { width: 86px; height: 86px; font-size: 34px; }
