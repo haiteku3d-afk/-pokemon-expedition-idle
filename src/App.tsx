@@ -4,9 +4,9 @@ import { missions, packs, pokemon, zones, type Zone } from './gameData';
 import {
   firebaseConfigured,
   getFirebaseAuth,
+  loadCloudGame,
   loginWithGoogle,
   saveCloudGame,
-  watchCloudGame,
   type CloudGameState,
 } from './firebase';
 
@@ -20,59 +20,85 @@ const icons: Record<View, string> = {
   more: '•••',
 };
 
+const MAX_OFFLINE_TIME = 8 * 60 * 60 * 1000;
+
 function App() {
   const [view, setView] = useState<View>('home');
   const [selectedZone, setSelectedZone] = useState<Zone>(zones[0]);
   const [coins, setCoins] = useState(630);
-  const [stones] = useState(2);
+  const [stones, setStones] = useState(2);
   const [starterId, setStarterId] = useState(7);
   const [cards, setCards] = useState<CloudGameState['cards']>({ '7': { copies: 1, level: 8 } });
   const [openingPack, setOpeningPack] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [cloudStatus, setCloudStatus] = useState<'prototype' | 'loading' | 'saved' | 'error'>('prototype');
-  const cloudReady = useRef(false);
+  const [cloudReady, setCloudReady] = useState(false);
+  const [offlineGain, setOfflineGain] = useState(0);
+  const coinClock = useRef(Date.now());
   const production = zones.filter((zone) => zone.status !== 'locked').reduce((sum, zone) => sum + zone.production, 0);
 
   useEffect(() => {
     const auth = getFirebaseAuth();
     if (!auth) return;
     setCloudStatus('loading');
-    let stopCloudWatch: () => void = () => {};
-    const stopAuthWatch = onAuthStateChanged(auth, (nextUser) => {
-      stopCloudWatch();
+    let cancelled = false;
+    const stopAuthWatch = onAuthStateChanged(auth, async (nextUser) => {
       setUser(nextUser);
-      cloudReady.current = false;
+      setCloudReady(false);
       if (!nextUser) {
         setCloudStatus('prototype');
         return;
       }
       setCloudStatus('loading');
-      stopCloudWatch = watchCloudGame(nextUser, (remote) => {
+      try {
+        const remote = await loadCloudGame(nextUser);
+        if (cancelled) return;
         if (remote) {
-          setCoins(remote.coins);
-          setStarterId(remote.starterId);
+          const elapsed = Math.min(Math.max(0, Date.now() - (remote.lastActiveAt ?? Date.now())), MAX_OFFLINE_TIME);
+          const earnedOffline = Math.floor((elapsed / 60_000) * production);
+          setCoins(Math.max(0, remote.coins ?? 0) + earnedOffline);
+          setStones(Math.max(0, remote.stones ?? 0));
+          setStarterId(remote.starterId ?? 7);
           setCards(remote.cards ?? {});
+          setOfflineGain(earnedOffline);
         }
-        cloudReady.current = true;
+        coinClock.current = Date.now();
+        setCloudReady(true);
         setCloudStatus('saved');
-      });
+      } catch {
+        if (!cancelled) setCloudStatus('error');
+      }
     });
     return () => {
-      stopCloudWatch();
+      cancelled = true;
       stopAuthWatch();
     };
-  }, []);
+  }, [production]);
 
   useEffect(() => {
-    if (!user || !cloudReady.current) return;
+    if (!user || !cloudReady) return;
+    coinClock.current = Date.now();
+    const timer = window.setInterval(() => {
+      const now = Date.now();
+      const earned = Math.floor(((now - coinClock.current) / 60_000) * production);
+      if (earned > 0) {
+        coinClock.current += (earned / production) * 60_000;
+        setCoins((current) => current + earned);
+      }
+    }, 1_000);
+    return () => window.clearInterval(timer);
+  }, [cloudReady, production, user]);
+
+  useEffect(() => {
+    if (!user || !cloudReady) return;
     setCloudStatus('loading');
     const timer = window.setTimeout(() => {
-      saveCloudGame(user, { coins, stones, starterId, cards })
+      saveCloudGame(user, { coins, stones, starterId, cards, lastActiveAt: Date.now() })
         .then(() => setCloudStatus('saved'))
         .catch(() => setCloudStatus('error'));
     }, 650);
     return () => window.clearTimeout(timer);
-  }, [cards, coins, starterId, stones, user]);
+  }, [cards, cloudReady, coins, starterId, stones, user]);
 
   const openGoogleLogin = () => {
     if (!firebaseConfigured) return;
@@ -121,6 +147,8 @@ function App() {
         <button className="avatar" aria-label="Perfil de entrenador">C</button>
       </header>
 
+      {offlineGain > 0 && <button className="offline-reward" onClick={() => setOfflineGain(0)}>+{offlineGain.toLocaleString('es-CL')} monedas mientras estabas fuera <span>×</span></button>}
+
       <main>{content}</main>
 
       <nav className="bottom-nav" aria-label="Navegación principal">
@@ -146,7 +174,7 @@ function HomeView({ production, onNavigate, starterId }: { production: number; o
           <span className="sun" />
           <span className="hill hill-back" />
           <span className="hill hill-front" />
-          <span className="partner-orb" style={{ '--poke': starter.color } as React.CSSProperties}>{starter.name[0]}</span>
+          <span className="partner-orb" style={{ '--poke': starter.color } as React.CSSProperties}><img src={starter.image} alt={starter.name} /></span>
         </div>
         <div className="hero-content">
           <div className="eyebrow-row"><span className="eyebrow">AVENTURA DE KANTO</span><span>Compañero: {starter.name}</span></div>
@@ -177,7 +205,7 @@ function HomeView({ production, onNavigate, starterId }: { production: number; o
           <span className="kicker">PODER DE CUENTA</span>
           <strong className="big-number">176</strong>
           <div className="party-row">
-            {pokemon.slice(0, 6).map((entry) => <span key={entry.id} title={`${entry.name}: ${entry.power}`} style={{ '--poke': entry.color } as React.CSSProperties}>{entry.name[0]}</span>)}
+            {pokemon.slice(0, 6).map((entry) => <span key={entry.id} title={`${entry.name}: ${entry.power}`} style={{ '--poke': entry.color } as React.CSSProperties}><img src={entry.image} alt="" /></span>)}
           </div>
         </article>
 
@@ -240,22 +268,23 @@ function MapView({ selected, onSelect }: { selected: Zone; onSelect: (zone: Zone
 }
 
 function PacksView({ coins, onOpen }: { coins: number; onOpen: (id: string, price: number) => void }) {
-  return <div className="page"><div className="page-title"><div><span className="kicker">CENTRO DE SUMINISTROS</span><h1>Sobres de expedición</h1><p>Cinco cartas por sobre. Consulta siempre las probabilidades.</p></div></div><div className="pack-grid">{packs.map((pack) => <article className="pack-card panel" key={pack.id}><div className={`pack-art ${pack.className}`}><span className="pack-shine"/><span className="pack-top">{pack.eyebrow}</span><span className="pack-emblem"><i /></span><strong>{pack.name.replace('Sobre ', '')}</strong><small>5 CARTAS</small></div><div className="pack-info"><span className="kicker">{pack.eyebrow}</span><h2>{pack.name}</h2><p>{pack.description}</p><div className="guarantee">◆ {pack.guarantee}</div><div className="pack-actions"><button className="odds">Ver probabilidades</button><button className="primary" disabled={coins < pack.price} onClick={() => onOpen(pack.id, pack.price)}>◉ {pack.price}</button></div></div></article>)}</div></div>;
+  return <div className="page"><div className="page-title"><div><span className="kicker">CENTRO DE SUMINISTROS</span><h1>Sobres de expedición</h1><p>Cinco cartas por sobre. Consulta siempre las probabilidades.</p></div></div><div className="pack-grid">{packs.map((pack) => { const featured = pokemon.find((entry) => entry.id === pack.featuredPokemonId)!; return <article className="pack-card panel" key={pack.id}><div className={`pack-art ${pack.className}`}><span className="pack-shine"/><span className="pack-top">{pack.eyebrow}</span><img className="pack-pokemon" src={featured.image} alt="" /><span className="pack-emblem"><i /></span><strong>{pack.name.replace('Sobre ', '')}</strong><small>5 CARTAS</small></div><div className="pack-info"><span className="kicker">{pack.eyebrow}</span><h2>{pack.name}</h2><p>{pack.description}</p><div className="guarantee">◆ {pack.guarantee}</div><div className="pack-actions"><button className="odds">Ver probabilidades</button><button className="primary" disabled={coins < pack.price} onClick={() => onOpen(pack.id, pack.price)}>◉ {pack.price}</button></div></div></article>; })}</div></div>;
 }
 
 function PackOpening({ packId, onClose, onAccept, cloudSaved }: { packId: string; onClose: () => void; onAccept: () => void; cloudSaved: boolean }) {
   const pack = packs.find((item) => item.id === packId)!;
-  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={`Apertura de ${pack.name}`}><div className="opening-modal"><button className="modal-close" onClick={onClose} aria-label="Cerrar">×</button><span className="kicker">{cloudSaved ? 'LISTO PARA GUARDAR EN LA NUBE' : 'RESULTADO DEL PROTOTIPO'}</span><h2>{pack.name}</h2><div className={`pack-art opening-pack ${pack.className}`}><span className="pack-shine"/><span className="pack-emblem"><i /></span><strong>{pack.name.replace('Sobre ', '')}</strong></div><div className="revealed-cards">{pokemon.slice(0,5).map((entry, index) => <div className={`mini-card rarity-${index}`} key={entry.id}><span style={{ '--poke': entry.color } as React.CSSProperties}>{entry.name[0]}</span><strong>{entry.name}</strong><small>{index === 4 ? 'RARA' : index === 0 ? 'NUEVA' : '+1 COPIA'}</small></div>)}</div><button className="primary" onClick={onAccept}>Añadir a la colección</button></div></div>;
+  const featured = pokemon.find((entry) => entry.id === pack.featuredPokemonId)!;
+  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={`Apertura de ${pack.name}`}><div className="opening-modal"><button className="modal-close" onClick={onClose} aria-label="Cerrar">×</button><span className="kicker">{cloudSaved ? 'LISTO PARA GUARDAR EN LA NUBE' : 'RESULTADO DEL PROTOTIPO'}</span><h2>{pack.name}</h2><div className={`pack-art opening-pack ${pack.className}`}><span className="pack-shine"/><img className="pack-pokemon" src={featured.image} alt="" /><span className="pack-emblem"><i /></span><strong>{pack.name.replace('Sobre ', '')}</strong></div><div className="revealed-cards">{pokemon.slice(0,5).map((entry, index) => <div className={`mini-card rarity-${index}`} key={entry.id}><span style={{ '--poke': entry.color } as React.CSSProperties}><img src={entry.image} alt={entry.name} /></span><strong>{entry.name}</strong><small>{index === 4 ? 'RARA' : index === 0 ? 'NUEVA' : '+1 COPIA'}</small></div>)}</div><button className="primary" onClick={onAccept}>Añadir a la colección</button></div></div>;
 }
 
 function PokedexView({ cards }: { cards: CloudGameState['cards'] }) {
   const found = Object.keys(cards).length;
-  return <div className="page"><div className="page-title"><div><span className="kicker">COLECCIÓN</span><h1>Pokédex de Kanto</h1><p>{found} especies encontradas de {pokemon.length} disponibles en el prototipo.</p></div><input className="search" placeholder="Buscar Pokémon" /></div><div className="pokedex-grid">{pokemon.map((entry) => { const owned = cards[String(entry.id)]; return <article className={`pokemon-card panel ${owned ? '' : 'unowned'}`} key={entry.id}><span className="pokemon-orb" style={{ '--poke': entry.color } as React.CSSProperties}>{owned ? entry.name[0] : '?'}</span><div><span className="kicker">N.º {String(entry.id).padStart(3, '0')} · {entry.rarity}</span><h3>{owned ? entry.name : 'No descubierto'}</h3><p>{owned ? `${entry.type} · Nivel ${owned.level} · ${owned.copies} copias` : 'Encuéntralo en sobres o expediciones'}</p></div><strong>{owned ? `⚡ ${entry.power + owned.level * 2}` : '—'}</strong></article>; })}</div></div>;
+  return <div className="page"><div className="page-title"><div><span className="kicker">COLECCIÓN</span><h1>Pokédex de Kanto</h1><p>{found} especies encontradas de {pokemon.length} disponibles en el prototipo.</p></div><input className="search" placeholder="Buscar Pokémon" /></div><div className="pokedex-grid">{pokemon.map((entry) => { const owned = cards[String(entry.id)]; return <article className={`pokemon-card panel ${owned ? '' : 'unowned'}`} key={entry.id}><span className="pokemon-orb" style={{ '--poke': entry.color } as React.CSSProperties}><img src={entry.image} alt={owned ? entry.name : ''} /></span><div><span className="kicker">N.º {String(entry.id).padStart(3, '0')} · {entry.rarity}</span><h3>{owned ? entry.name : 'No descubierto'}</h3><p>{owned ? `${entry.type} · Nivel ${owned.level} · ${owned.copies} copias` : 'Encuéntralo en sobres o expediciones'}</p></div><strong>{owned ? `⚡ ${entry.power + owned.level * 2}` : '—'}</strong></article>; })}</div></div>;
 }
 
 function MoreView({ starterId, onStarterChange, cloudEnabled }: { starterId: number; onStarterChange: (id: number) => void; cloudEnabled: boolean }) {
   const starters = pokemon.filter((entry) => [1, 4, 7].includes(entry.id));
-  return <div className="page"><div className="page-title"><div><span className="kicker">CAMPAMENTO</span><h1>Más opciones</h1><p>Investigación, estadísticas y configuración del entrenador.</p></div></div><section className="starter-panel panel"><span className="kicker">COMPAÑERO INICIAL</span><h2>Elige quién aparece en tu campamento</h2><div className="starter-grid">{starters.map((entry) => <button className={starterId === entry.id ? 'selected' : ''} onClick={() => onStarterChange(entry.id)} key={entry.id}><span style={{ '--poke': entry.color } as React.CSSProperties}>{entry.name[0]}</span><strong>{entry.name}</strong></button>)}</div></section><div className="settings-grid">{['Investigación', 'Misiones permanentes', 'Estadísticas', 'Cuenta y guardado'].map((title, index) => <button className="settings-card panel" key={title}><span>{['⌬','✓','↗','☁'][index]}</span><div><strong>{title}</strong><small>{index === 0 ? 'Mejora expediciones y equipos' : index === 3 ? cloudEnabled ? 'Google y Firestore listos para configurar' : 'Requiere las variables de Firebase' : 'Ver progreso'}</small></div><b>›</b></button>)}</div></div>;
+  return <div className="page"><div className="page-title"><div><span className="kicker">CAMPAMENTO</span><h1>Más opciones</h1><p>Investigación, estadísticas y configuración del entrenador.</p></div></div><section className="starter-panel panel"><span className="kicker">COMPAÑERO INICIAL</span><h2>Elige quién aparece en tu campamento</h2><div className="starter-grid">{starters.map((entry) => <button className={starterId === entry.id ? 'selected' : ''} onClick={() => onStarterChange(entry.id)} key={entry.id}><span style={{ '--poke': entry.color } as React.CSSProperties}><img src={entry.image} alt={entry.name} /></span><strong>{entry.name}</strong></button>)}</div></section><div className="settings-grid">{['Investigación', 'Misiones permanentes', 'Estadísticas', 'Cuenta y guardado'].map((title, index) => <button className="settings-card panel" key={title}><span>{['⌬','✓','↗','☁'][index]}</span><div><strong>{title}</strong><small>{index === 0 ? 'Mejora expediciones y equipos' : index === 3 ? cloudEnabled ? 'Google y Firestore listos para configurar' : 'Requiere las variables de Firebase' : 'Ver progreso'}</small></div><b>›</b></button>)}</div></div>;
 }
 
 export default App;
