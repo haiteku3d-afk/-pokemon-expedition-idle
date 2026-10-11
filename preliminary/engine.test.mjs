@@ -1,0 +1,7 @@
+import assert from 'node:assert/strict';import fs from 'node:fs';
+import {initial,makeRoutes,acquire,begin,advance,openPack,slots} from './engine.mjs';
+const c=JSON.parse(fs.readFileSync(new URL('./catalog.json',import.meta.url))).map(p=>({...p,bst:p.stats.reduce((a,b)=>a+b,0)}));const by=Object.fromEntries(c.map(p=>[p.id,p]));const routes=makeRoutes(c);
+assert.equal(c.length,1025);assert.equal(new Set(c.map(p=>p.species)).size,1025);assert.equal(routes.flatMap(r=>r.pool).length,1025);assert.equal(new Set(routes.flatMap(r=>r.pool).map(p=>p.id)).size,1025);
+const a=initial(0);[1,4,7].forEach(id=>acquire(a,by[id]));a.teams[0].ids=[by[1].family,by[4].family,by[7].family];assert(begin(a,0,routes[0],by,0));const b=structuredClone(a);advance(a,routes,3600000);for(let t=1000;t<=3600000;t+=1000)advance(b,routes,t);assert.deepEqual(a,b);assert.equal(a.teams[0].run.status,'fallen');const coins=a.coins;advance(a,routes,999999999);assert.equal(a.coins,coins);assert.equal(a.packs[0],a.teams[0].run.step);assert(openPack(a,routes[0]).length===3);
+const iv=initial();for(let i=0;i<20000;i++)acquire(iv,by[1]);assert.equal(iv.collection[by[1].family].spent,186);assert(iv.collection[by[1].family].iv.every(x=>x===31));acquire(iv,by[1],true);assert(iv.collection[by[1].family].shiny);assert.equal(slots({...iv,badges:0}),1);assert.equal(slots({...iv,badges:8}),6);
+console.log('PASS: complete catalog, route coverage, offline equivalence, death cutoff, pack rewards, automatic IV cap, shiny unlock, team slots');
