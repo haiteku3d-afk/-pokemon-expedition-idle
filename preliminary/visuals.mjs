@@ -13,4 +13,5 @@ export const ROUTE_THEMES=[
 ];
 export const damageTone=multiplier=>multiplier>=4?'overwhelming':multiplier>=2?'effective':multiplier<=.1?'minimal':multiplier<1?'resisted':'normal';
 export function visibleDamageEvents(events,now){return (events||[]).filter(e=>e.damage>0&&now>=e.at&&now-e.at<1600).slice(-6);}
-export function campMotion(id,time){const seed=id*7919,cycle=18000+(id%9)*1300,t=(time+seed)%cycle/cycle;const nodes=[{x:8+seed%19,y:29+seed%20},{x:50+seed%30,y:18+seed%17},{x:56+seed%28,y:58+seed%21},{x:10+seed%28,y:54+seed%19}];const segment=Math.floor(t*4),p=t*4-segment,a=nodes[segment],b=nodes[(segment+1)%4];return {x:a.x+(b.x-a.x)*p,y:a.y+(b.y-a.y)*p,right:b.x>a.x,bob:Math.floor((time+seed)/220)%2*3};}
+// Waypoints remain inside the unobstructed center of the generated meadow.
+export function campMotion(id,time){const seed=id*7919,cycle=30000+(id%9)*1900,t=(time+seed)%cycle/cycle;const nodes=[{x:14+seed%20,y:32+seed%16},{x:50+seed%30,y:30+seed%15},{x:52+seed%30,y:58+seed%17},{x:14+seed%22,y:58+seed%17}];const segment=Math.floor(t*4),p=t*4-segment,a=nodes[segment],b=nodes[(segment+1)%4];return {x:a.x+(b.x-a.x)*p,y:a.y+(b.y-a.y)*p,right:b.x>a.x,bob:Math.floor((time+seed)/220)%2*2};}
