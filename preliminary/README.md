@@ -1,11 +1,11 @@
-# Expedition Idle — preliminar 0.4
+# Expedition Idle — preliminar 0.5
 
 Versión independiente de diseño y balance sobre el proyecto original. Servir esta carpeta mediante un servidor estático.
 
 - 1025 especies nacionales y 540 familias evolutivas, generaciones 1–9. No incluye formas alternativas ni megas.
 - Elección inicial entre los 27 iniciales de nueve generaciones. Un Pokémon inicial, sin colección gratuita adicional.
 - PWB: suma de estadísticas base. PWT: PWB + IVs actuales; nivel y aura se aplican aparte.
-- Once rutas por intervalo PWB, con rival de nivel 3 + 8×ruta (±1). Equipos enemigos de igual tamaño al equipo que sale.
+- Once rutas por intervalo PWB, con rival de nivel 3 + 8×ruta (±1). Un rival por encuentro. Solo combate el primer compañero vivo; si cae, se releva automáticamente sin curar al rival. Tener reservas alarga la incursión.
 - Tipos oficiales (PokéAPI type_efficacy.csv). Ataques de potencia 40 y STAB ×1,5. Inmunidades sustituidas por multiplicador mínimo total ×0,1. Doble tipo combina efectividades. Cada Pokémon elige su propio tipo más efectivo y ataque físico/especial según su atributo ofensivo más alto. Esta preliminar no usa movimientos individuales.
 - Estadísticas al nivel e IVs actuales; velocidad ordena turnos. Sin curación entre combates. El equipo pierde miembros al caer y la expedición termina cuando todos caen. Recorrido dependiente de velocidad (12/(1+velocidad_media/25) segundos, mínimo 3 s), seguido de un duelo visual de 4 s, hasta 60 rondas internas (agotamiento implica derrota). Online y offline usan exactamente la misma simulación y RNG de expedición.
 - Sobres: 20% por victoria; sin premios tras perder. Tres Pokémon por sobre. Apertura de 1, 10, 50 o todos (máximo 1000 por operación) y resumen agrupado. RNG del sobre independiente del RNG de las expediciones.
@@ -13,7 +13,7 @@ Versión independiente de diseño y balance sobre el proyecto original. Servir e
 - IV automático por reciclaje (1/3/6 puntos por etapa), coste 1+mejoras gastadas, mejora el atributo más bajo, máximo 31 por atributo.
 - Primera captura shiny 1/512: aura familiar permanente +5% de daño, sin apilar duplicados.
 - Laboratorio: simular ocho horas, añadir colección de prueba, exportar/importar y reiniciar con confirmación en la interfaz.
-- Partidas de preliminar 0.2/0.3 conservan colección, monedas, medallas y sobres. Se retiran expediciones antiguas para adoptar el nuevo combate. Guardado local, separado de Firebase.
+- Partidas de preliminar 0.2/0.3/0.4 conservan colección, monedas, medallas y sobres. Se retiran expediciones antiguas para adoptar el nuevo combate. Guardado local, separado de Firebase.
 
 ## Verificación
 
@@ -26,3 +26,7 @@ https://github.com/PokeAPI/pokeapi/tree/master/data/v2/csv y https://github.com/
 ## Pasillos y estadísticas
 
 Cada equipo tiene un pasillo CSS en pixel art, fases de recorrido/duelo, sprites pixelados, PS individuales y registro de ocho eventos (se muestran los cinco últimos). Se utiliza el sprite normal/shiny de PokéAPI en toda la interfaz, incluyendo la portada. La velocidad de supervivientes reduce el tiempo al siguiente rival. La ficha muestra seis estadísticas calculadas al nivel actual, bases e IVs. PS determina vida individual; ataque físico usa Defensa y especial usa Defensa especial. Los movimientos individuales aún no existen: ataque básico provisional de potencia 40. `attackCharge` prepara un tiempo de carga dependiente de velocidad para futuros ataques; ahora solo acompaña la animación de duelo. Los eventos de simulación y su reloj son idénticos online y offline.
+
+## Progresión de especies y relevo
+
+Las rutas comienzan con las cinco especies de menor PWB y desbloquean cinco más cada diez victorias acumuladas por ruta. Encuentros y sobres excluyen especies bloqueadas. Los combates concurrentes se resuelven cronológicamente para mantener igualdad online/offline al desbloquear especies. Cada victoria reparte 2 EXP a participantes y 1 EXP a reservas (50%), incluso si un participante se debilitó. El nivel actualizado se usa al salir de nuevo; el combate en curso conserva su ficha de salida. El log se muestra del más reciente al más antiguo. Expedición rápida repite el último equipo y ruta, restaurando PS, sin permitir duplicar compañeros asignados a otro equipo. Las partidas anteriores conservan colección y recompensas, y se retiran expediciones para adoptar el nuevo motor.
