@@ -1,4 +1,4 @@
-# Expedition Idle — preliminar 0.5
+# Expedition Idle — preliminar 0.6
 
 Versión independiente de diseño y balance sobre el proyecto original. Servir esta carpeta mediante un servidor estático.
 
@@ -13,7 +13,7 @@ Versión independiente de diseño y balance sobre el proyecto original. Servir e
 - IV automático por reciclaje (1/3/6 puntos por etapa), coste 1+mejoras gastadas, mejora el atributo más bajo, máximo 31 por atributo.
 - Primera captura shiny 1/512: aura familiar permanente +5% de daño, sin apilar duplicados.
 - Laboratorio: simular ocho horas, añadir colección de prueba, exportar/importar y reiniciar con confirmación en la interfaz.
-- Partidas de preliminar 0.2/0.3/0.4 conservan colección, monedas, medallas y sobres. Se retiran expediciones antiguas para adoptar el nuevo combate. Guardado local, separado de Firebase.
+- Partidas de preliminar 0.2/0.3/0.4/0.5 conservan colección, monedas, medallas y sobres. Se retiran expediciones antiguas para adoptar el nuevo combate. Guardado local, separado de Firebase.
 
 ## Verificación
 
@@ -29,4 +29,16 @@ Cada equipo tiene un pasillo CSS en pixel art, fases de recorrido/duelo, sprites
 
 ## Progresión de especies y relevo
 
-Las rutas comienzan con las cinco especies de menor PWB y desbloquean cinco más cada diez victorias acumuladas por ruta. Encuentros y sobres excluyen especies bloqueadas. Los combates concurrentes se resuelven cronológicamente para mantener igualdad online/offline al desbloquear especies. Cada victoria reparte 2 EXP a participantes y 1 EXP a reservas (50%), incluso si un participante se debilitó. El nivel actualizado se usa al salir de nuevo; el combate en curso conserva su ficha de salida. El log se muestra del más reciente al más antiguo. Expedición rápida repite el último equipo y ruta, restaurando PS, sin permitir duplicar compañeros asignados a otro equipo. Las partidas anteriores conservan colección y recompensas, y se retiran expediciones para adoptar el nuevo motor.
+Las rutas comienzan con las cinco especies de menor PWB y desbloquean cinco más cada diez victorias acumuladas por ruta. Encuentros y sobres excluyen especies bloqueadas. Los combates concurrentes se resuelven cronológicamente para mantener igualdad online/offline al desbloquear especies. La EXP sigue la fórmula de primera generación y el reparto detallado abajo. Los debilitados no reciben EXP. Las estadísticas se actualizan al subir de nivel durante la expedición. El log se muestra del más reciente al más antiguo. Expedición rápida repite el último equipo y ruta, restaurando PS, sin permitir duplicar compañeros asignados a otro equipo. Las partidas anteriores conservan colección y recompensas, y se retiran expediciones para adoptar el nuevo motor.
+
+## Experiencia (0.6)
+
+Referencia solicitada: https://www.pokexperto.net/index2.php?seccion=mecanica/experience
+
+EXP por rival salvaje = floor(EXP base de especie × nivel / 7), sin bonus de entrenador/intercambio/objeto. Principal superviviente que vence al rival recibe floor(EXP/2); el otro 50% se divide equitativamente entre compañeros no debilitados, redondeando hacia abajo. Si solo queda un superviviente, recibe toda la EXP. Nivel 100 consume su porción pero no acumula más EXP.
+
+Todas las especies usan crecimiento normal, EXP total = nivel³. Nivel 5 empieza con 125 EXP y nivel 6 requiere 216 (91 adicionales). Máximo nivel 100 / 1.000.000 EXP. Barras azules bajo los PS muestran progreso dentro del nivel. Los niveles anteriores se conservan al convertir su progreso fraccional al nuevo intervalo cúbico.
+
+Kanto utiliza los 151 valores de experiencia base de Rojo/Azul extraídos de las tablas de https://github.com/pret/pokered/tree/master/data/pokemon/base_stats y preservados como datos numéricos en data/gen1_experience.json. Especies de generaciones posteriores usan base_experience de PokéAPI, ya que no existían en primera generación; a todas se aplica la misma fórmula Gen1.
+
+Al subir de nivel, las estadísticas del combatiente vivo se recalculan. Sus PS crecen en la diferencia de PS máximos, conservando heridas; ningún debilitado revive. Sprites aliados invertidos horizontalmente durante recorrido y ataques. Ataque básico todavía provisional, no hay movimientos individuales implementados.
