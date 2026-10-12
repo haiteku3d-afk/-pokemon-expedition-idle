@@ -12,3 +12,5 @@ Gimnasios: plantilla de 2–5 rivales por líder, duelos reales con cargas, sin 
 Evolución: niveles de PokéAPI para evolución por nivel; condiciones especiales adaptadas a nivel 25/40 sin inventario. Cadenas automáticas, ramas elegibles, progreso conservado. Fuente: data/v2/csv/pokemon_evolution.csv de PokeAPI.
 
 Los sobres que contienen una etapa evolutiva superior cambian automáticamente la forma del compañero, sin requisito de nivel. Nunca lo hacen retroceder. En expedición se actualizan estadísticas sin restaurar heridas, estados ni cargas.
+
+UI de combate: nombre y nivel sobre el sprite, carga y ataque debajo. Detalles del equipo plegados por defecto y expansión conservada durante actualizaciones. Gimnasios: nivel efectivo limitado al nivel del líder + 2; no modifica el nivel real ni la EXP.
