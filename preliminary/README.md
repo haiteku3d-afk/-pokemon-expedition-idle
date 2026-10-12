@@ -1,4 +1,4 @@
-# Pokémon Expedition · v0.12.2
+# Pokémon Expedition · v0.12.3
 
 Juego estático con 1025 especies, movimientos por nivel, duelos 1 contra 1, IVs automáticos, evolución, reparto de EXP y simulación offline. Sprites pixel art de PokéAPI; escenarios raster originales inspirados en tercera generación. Colección completa paseando por un prado desplazable.
 
@@ -27,3 +27,5 @@ Las rutas conservan 20% de sobre, EXP Gen1 (`floor(EXP base * nivel / 7)`), repa
 `node --test preliminary/*.test.mjs` desde la raíz. Incluye 54 combinaciones de gimnasio/categoría, equivalencia online/offline, ausencia de EXP de gimnasio, recompensas por tipo, exclusividad, garantía, apertura múltiple, migración, límites de velocidad y pruebas de interfaz con DOM simulado. La validación visual en navegador no está incluida. Los sprites requieren conexión a GitHub/PokéAPI.
 
 Estados y cambios de estadísticas visibles encima del nombre de cada combatiente, dentro de la escena. Indicadores verdes/naranjas con etapas, estados principales y efectos temporales, clima, sustituto y contadores por acción. Reservas visibles en el desplegable. La vista lee al combatiente actual, por lo que curación, reinicio y relevo eliminan los indicadores correspondientes sin reproducir el log.
+
+Corrección de curación: Drenadoras absorbe el daño residual real (hasta 1/8 PS máximos del rival), muestra curación verde y no revive. Acua Aro y Arraigo regeneran 1/16 por acción sin acumular al repetir. Absorción, curación y retroceso usan cambios reales de PS; los números flotantes conservan por separado daño y curación incluso en la misma acción. Curación directa/Descanso añaden 2 s de carga base; efectos persistentes de curación añaden 1 s, ambos afectados por velocidad.
