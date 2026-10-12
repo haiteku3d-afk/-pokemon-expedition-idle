@@ -29,3 +29,7 @@ Equipo, orden y movimientos se actualizan al instante y agrupan sus comandos tra
 Se consulta el resultado al caer un equipo, al regresar a la pestaña y cada 5 minutos si hay expediciones activas. Al ocultar la pestaña se intenta vaciar la preparación pendiente; solo el indicador «Guardado en tu cuenta» confirma su persistencia. Cerrar bruscamente antes de completar el envío puede perder los últimos cambios de preparación. Las expediciones ya confirmadas siguen calculándose offline.
 
 Reintentos usan el mismo identificador y contenido, incluso tras una respuesta perdida. Ante conflicto con otro dispositivo se carga su estado y se descarta la preparación pendiente, con aviso, para no aplicar selecciones antiguas. Las recompensas siguen siendo automáticas, sin botón de reclamar.
+
+### v0.13.2 — navegación durante expediciones
+
+Los ticks de combate conservan los botones del menú para no interrumpir los toques. Una confirmación tardía de inicio respeta la pantalla elegida mientras esperaba el servidor.
