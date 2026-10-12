@@ -33,3 +33,7 @@ Reintentos usan el mismo identificador y contenido, incluso tras una respuesta p
 ### v0.13.2 — navegación durante expediciones
 
 Los ticks de combate conservan los botones del menú para no interrumpir los toques. Una confirmación tardía de inicio respeta la pantalla elegida mientras esperaba el servidor.
+
+### v0.13.3 — controles estables en móvil
+
+El reloj de combate actualiza solamente el contenedor de equipos, sin reconstruir la pantalla ni el menú. Se pausan las actualizaciones visuales durante un toque. La navegación queda en una capa independiente con espacio para el indicador de inicio de iPhone. Los enlaces a JS y CSS llevan la versión real para evitar reutilizar la edición anterior.
