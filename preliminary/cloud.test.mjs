@@ -19,7 +19,7 @@ const expected=structuredClone(alice.state);now+=8*3600000;advance(expected,conf
 const endedCoins=alice.state.coins;now+=3600000;alice=await (await get(user)).json();assert.equal(alice.state.coins,endedCoins);
 // Real earned packs open once even when the exact network request is retried.
 if(!(alice.state.packs[0]>0)){for(let i=0;i<10&&!(alice.state.packs[0]>0);i++){alice=await (await command(user,alice.revision,{type:'quick',id:0})).json();now+=3600000;alice=await (await get(user)).json();}}
-assert(alice.state.packs[0]>0);const packs=alice.state.packs[0],opening=crypto.randomUUID(),revision=alice.revision;const one=await (await command(user,revision,{type:'open',id:'0',count:1},opening)).json();const duplicate=await (await command(user,revision,{type:'open',id:'0',count:1},opening)).json();assert.equal(one.state.packs[0],packs-1);assert.deepEqual(one,duplicate);assert.equal(one.result.batch.results.length,3);
+assert(alice.state.packs[0]>0);const packs=alice.state.packs[0],opening=crypto.randomUUID(),revision=alice.revision;const one=await (await command(user,revision,{type:'open',id:'0',count:1},opening)).json();const duplicate=await (await command(user,revision,{type:'open',id:'0',count:1},opening)).json();assert.equal(one.state.packs[0],packs-1);assert.deepEqual(one,duplicate);assert.equal(one.result.batch.results.length,3);assert(one.result.batch.results.every(x=>Number.isInteger(x.level)&&x.level>=1&&x.level<=10));
 // Preparation plus expedition start is atomic; invalid batches cannot partly save.
 let fresh=await (await get(second)).json();fresh=await (await command(second,fresh.revision,{type:'starter',id:7})).json();
 const beforeBatch=JSON.stringify(fresh.state),family=fresh.state.teams[0].ids[0];
