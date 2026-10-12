@@ -10,3 +10,5 @@ Corrección: fondos con proporción original y recorte centrado, sin estiramient
 
 Gimnasios: plantilla de 2–5 rivales por líder, duelos reales con cargas, sin curación entre rivales, sin EXP ni niveles gratuitos. Una medalla y 150–500 monedas por victoria completa.
 Evolución: niveles de PokéAPI para evolución por nivel; condiciones especiales adaptadas a nivel 25/40 sin inventario. Cadenas automáticas, ramas elegibles, progreso conservado. Fuente: data/v2/csv/pokemon_evolution.csv de PokeAPI.
+
+Los sobres que contienen una etapa evolutiva superior cambian automáticamente la forma del compañero, sin requisito de nivel. Nunca lo hacen retroceder. En expedición se actualizan estadísticas sin restaurar heridas, estados ni cargas.
