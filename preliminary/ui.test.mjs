@@ -33,3 +33,10 @@ const realNow=Date.now,jump=realNow()+24*3600000;Date.now=()=>jump;combatTick.fn
 const source=fs.readFileSync(new URL('./app.mjs',import.meta.url),'utf8');assert(!source.includes('Simular 8 horas'));assert(!source.includes('Añadir colección de prueba'));assert(!source.includes("act==='import'"));assert(!source.includes('localStorage.getItem'));console.log('PASS cloud sign-in gate, fresh game, account persistence, no lab/import/cheats, real command UI, pack openings, team order, gym, effects above names, conflicts and offline recovery');
 
 const html=fs.readFileSync(new URL('./index.html',import.meta.url),'utf8');const release=html.match(/VERSIÓN \/ (v[\d.]+)/)[1];assert(html.includes('app.mjs?v='+release.slice(1)));assert(html.includes('style.css?v='+release.slice(1)));
+
+await click({view:'routes'});assert.equal((elements['#app'].innerHTML.match(/class="route-art"/g)||[]).length,11);assert(elements['#app'].innerHTML.includes('Especies desbloqueadas'));
+await click({view:'dex'});assert(elements['#app'].innerHTML.includes('specimen-card'));assert(elements['#app'].innerHTML.includes('type-badge'));
+await click({view:'home'});assert.equal((elements['#app'].innerHTML.match(/class="medal-emblem /g)||[]).length,18);
+await click({action:'more'});assert(elements['#modal'].innerHTML.includes('more-menu'));assert(elements['#modal'].open);await click({view:'wiki'});assert(!elements['#modal'].open);assert(elements['#app'].innerHTML.includes('wiki-topic'));assert(elements['#app'].innerHTML.includes('Equipo recomendado por ruta'));
+await click({view:'teams'});await click({action:'setRoute',id:'0',route:'0'});assert(elements['#modal'].innerHTML.includes('setup-footer'));assert.equal((elements['#modal'].innerHTML.match(/class="order-slot/g)||[]).length,6);
+const visualFixture=stored();visualFixture.packs['gym:0:0']=1;fixture(visualFixture);await click({action:'syncNow'});await click({view:'packs'});assert(elements['#app'].innerHTML.includes('pack-illustration'));assert(elements['#nav'].innerHTML.includes('nav-more'));console.log('PASS atlas, medals, six slots, sticky confirmation, More navigation, wiki and gym packs');
