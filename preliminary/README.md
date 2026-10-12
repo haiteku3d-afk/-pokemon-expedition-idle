@@ -1,16 +1,27 @@
-# Pokémon Expedition · v0.11
+# Pokémon Expedition · v0.12
 
-Mejoras visuales: daño flotante coloreado por efectividad, once paisajes según ruta, Wiki con las reglas y campamento con Pokémon paseando. Fondos raster originales inspirados en la tercera generación: once rutas y un prado. Toda la colección aparece en un mapa ampliable sin páginas, con desplazamiento por arrastre. Los escenarios se distribuyen desde un atlas de 4 × 3. No modifica el formato de la partida ni reinicia las expediciones.
+Juego estático con 1025 especies, movimientos por nivel, duelos 1 contra 1, IVs automáticos, evolución, reparto de EXP y simulación offline. Sprites pixel art de PokéAPI; escenarios raster originales inspirados en tercera generación. Colección completa paseando por un prado desplazable.
 
-Catálogo de 1025 especies, movimientos por nivel, duelos 1 vs 1, IVs automáticos, reparto de EXP y simulación offline.
+## Circuito de tipos
 
-Pruebas: `node --test preliminary/*.test.mjs` desde la raíz. Los sprites requieren conexión a GitHub/PokéAPI.
+18 gimnasios adaptados, uno por tipo, con 18 medallas únicas. Grupos de seis disponibles a 0, 4 y 10 medallas. Cada gimnasio permite Bronce/Plata/Oro. Plata requiere medalla y 3 líderes vencidos en ese gimnasio; Oro requiere 10 y al menos una victoria en Plata. Equipos desbloqueados a 0, 2, 5, 9, 13 y 18 medallas.
 
-Corrección: fondos con proporción original y recorte centrado, sin estiramiento. Ataques en el orden equipado, reiniciando la secuencia por duelo y omitiendo movimientos bloqueados por estados.
+Cada ciclo: tres entrenadores de un Pokémon y un líder de 2/3/4. El equipo conserva heridas y estados entre combates; la incursión repite ciclos hasta caer. Rivales +2 niveles y +12% de estadísticas por ciclo. Nivel del jugador limitado temporalmente a 12/28/46 según grupo, +20 en Plata y +40 en Oro. El nivel real, EXP y movimientos aprendidos permanecen. Sin EXP ni monedas de gimnasio.
 
-Gimnasios: plantilla de 2–5 rivales por líder, duelos reales con cargas, sin curación entre rivales, sin EXP ni niveles gratuitos. Una medalla y 150–500 monedas por victoria completa.
-Evolución: niveles de PokéAPI para evolución por nivel; condiciones especiales adaptadas a nivel 25/40 sin inventario. Cadenas automáticas, ramas elegibles, progreso conservado. Fuente: data/v2/csv/pokemon_evolution.csv de PokeAPI.
+Entrenadores: 15% de sobre. Derrotar al líder completo: 50%; primera medalla garantiza uno. Tres Pokémon por sobre, todos del tipo elegido (se permiten tipos dobles). Categorías con techo PWB 350/500/sin límite. Cada categoría hereda especies desbloqueadas de las inferiores y abre cinco de su nueva franja; +5 cada dos líderes vencidos en esa categoría. Peso = exp(-(PWB - mínimo)/120) × (1 + etapa/2), con ×0,15 legendarios y ×3 para la nueva franja de Plata/Oro.
 
-Los sobres que contienen una etapa evolutiva superior cambian automáticamente la forma del compañero, sin requisito de nivel. Nunca lo hacen retroceder. En expedición se actualizan estadísticas sin restaurar heridas, estados ni cargas.
+Una especie exclusiva por gimnasio, sin línea evolutiva y excluida de todas las rutas y los otros gimnasios. Después de obtener la medalla: 8% por sobre de reemplazar la primera carta por el exclusivo; garantizado al sobre 20 sin exclusivo. Contador compartido entre categorías. Apertura múltiple idéntica a abrir individualmente. Los exclusivos están exentos del techo PWB.
 
-UI de combate: nombre y nivel sobre el sprite, carga y ataque debajo. Detalles del equipo plegados por defecto y expansión conservada durante actualizaciones. Gimnasios: nivel efectivo limitado al nivel del líder + 2; no modifica el nivel real ni la EXP.
+## Velocidad por zona
+
+Exigencia de zona = redondear(5 + 1,2 × nivel). Media de Velocidad de compañeros vivos, sin cambios temporales de atributos. Hasta igualar la exigencia: 15 s. Por encima: `max(3, 15 / (1 + 0.5 * (media / exigencia - 1)))` segundos. Doble: 10 s; triple: 7,5 s. Se calcula al preparar cada encuentro. Rutas mantienen su exigencia; gimnasios la incrementan con sus ciclos. La carga de ataques sigue usando velocidad individual y estados de combate.
+
+## Partidas y progresión
+
+Guardado versión 7 en la misma clave local. Convierte las ocho medallas antiguas a sus tipos; conserva colección, IVs, sobres y desbloqueos previos de rutas/equipos. Los desafíos antiguos de gimnasio regresan al campamento; las rutas activas continúan. No borra Pokémon exclusivos obtenidos antes de esta actualización.
+
+Las rutas conservan 20% de sobre, EXP Gen1 (`floor(EXP base * nivel / 7)`), reparto 50% al activo y 50% entre reservas vivas, crecimiento n³. Rutas por PWB y desbloqueos de especies por victorias. Los sobres con una etapa evolutiva superior evolucionan al compañero sin requisito de nivel. Cadenas sin ramas evolucionan automáticamente por nivel; ramificaciones elegibles desde Pokédex. Condiciones especiales adaptadas a nivel 25/40 cuando no hay nivel original en PokéAPI.
+
+## Validación
+
+`node --test preliminary/*.test.mjs` desde la raíz. Incluye 54 combinaciones de gimnasio/categoría, equivalencia online/offline, ausencia de EXP de gimnasio, recompensas por tipo, exclusividad, garantía, apertura múltiple, migración, límites de velocidad y pruebas de interfaz con DOM simulado. La validación visual en navegador no está incluida. Los sprites requieren conexión a GitHub/PokéAPI.
