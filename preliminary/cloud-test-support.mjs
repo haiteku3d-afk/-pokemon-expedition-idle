@@ -1,0 +1,2 @@
+import {DatabaseSync} from 'node:sqlite';
+export function testDatabase(){const sql=new DatabaseSync(':memory:');sql.exec('CREATE TABLE players (user_id TEXT PRIMARY KEY, state TEXT NOT NULL, revision INTEGER NOT NULL DEFAULT 0, updated_at INTEGER NOT NULL, last_op TEXT, last_result TEXT)');return {sql,prepare(query){return {bind(...params){return {async first(){return sql.prepare(query).get(...params)||null;},async run(){return {meta:{changes:sql.prepare(query).run(...params).changes}};}};}};}};}
