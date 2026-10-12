@@ -59,3 +59,7 @@ Cada expedición finalizada deja un panel sobre el pasillo con una cabecera pixe
 Se registra por compañero EXP de combate realmente aplicada, niveles inicial/final, evoluciones y nuevos movimientos. Cambios causados por sobres durante el recorrido se identifican por separado y no inflan la EXP de combate. El historial se copia al terminar/retirar/repetir para conservarlo aunque luego cambie la colección. Recorridos anteriores incluyen solo el detalle registrado desde la actualización.
 
 Todas las 1.025 especies pueden aprender nuevos movimientos después del nivel 5. Se conservan sus repertorios originales; 57 especies sin progreso posterior o con repertorios muy pequeños reciben movimientos normales de entrenamiento en 10/20/35/50, adaptados a su mejor atributo ofensivo. Se mantienen el límite de cuatro equipados y la elección manual o automática.
+
+### v0.14.3 — cierre visible
+
+Todas las ventanas tienen el botón de cerrar en una barra superior, con el contenido desplazable por separado. El resumen sobre una expedición incluye también una barra superior que se mantiene visible al desplazarse por sus compañeros.
