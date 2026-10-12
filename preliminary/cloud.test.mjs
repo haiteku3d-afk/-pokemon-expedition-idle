@@ -19,6 +19,14 @@ const endedCoins=alice.state.coins;now+=3600000;alice=await (await get(user)).js
 // Real earned packs open once even when the exact network request is retried.
 if(!(alice.state.packs[0]>0)){for(let i=0;i<10&&!(alice.state.packs[0]>0);i++){alice=await (await command(user,alice.revision,{type:'quick',id:0})).json();now+=3600000;alice=await (await get(user)).json();}}
 assert(alice.state.packs[0]>0);const packs=alice.state.packs[0],opening=crypto.randomUUID(),revision=alice.revision;const one=await (await command(user,revision,{type:'open',id:'0',count:1},opening)).json();const duplicate=await (await command(user,revision,{type:'open',id:'0',count:1},opening)).json();assert.equal(one.state.packs[0],packs-1);assert.deepEqual(one,duplicate);assert.equal(one.result.batch.results.length,3);
+// Preparation plus expedition start is atomic; invalid batches cannot partly save.
+let fresh=await (await get(second)).json();fresh=await (await command(second,fresh.revision,{type:'starter',id:7})).json();
+const beforeBatch=JSON.stringify(fresh.state),family=fresh.state.teams[0].ids[0];
+assert.equal((await command(second,fresh.revision,{type:'sync',preparation:[{type:'pick',id:0,family},{type:'starter',id:4}]})).status,400);
+assert.equal(db.sql.prepare('SELECT state FROM players WHERE user_id = ?').get(second.userId).state,beforeBatch);
+assert.equal((await command(second,fresh.revision,{type:'sync',preparation:[{type:'pick',id:0,family,preparation:[]}]})).status,400);
+fresh=await (await command(second,fresh.revision,{type:'begin',id:0,route:0,preparation:[{type:'pick',id:0,family},{type:'pick',id:0,family},{type:'recommend',id:7}]})).json();
+assert.equal(fresh.state.teams[0].run.status,'active');assert.equal(fresh.state.collection[family].autoMoves,true);
 // Authenticated write boundary rejects missing custom header and oversized input.
 assert.equal((await handleGameRequest(new Request('https://game.test/api/game',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}),user,db,config,()=>now)).status,403);
 assert.equal((await handleGameRequest(new Request('https://game.test/api/game',{method:'POST',headers:{'Content-Type':'application/json','X-Game-Client':'expedition-v13'},body:'x'.repeat(12001)}),user,db,config,()=>now)).status,413);

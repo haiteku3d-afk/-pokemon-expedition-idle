@@ -5,7 +5,13 @@ export const GAME_ACTIONS=new Set(['starter','pick','order','equip','recommend',
 export class ActionError extends Error {}
 const requireValid=(v,message='Acción no disponible')=>{if(!v)throw new ActionError(message);};
 const integer=v=>{const n=Number(v);requireValid(v!==undefined&&v!==null&&v!==''&&Number.isInteger(n)&&n>=0,'Selección inválida');return n;};
-export function applyAction(s,a,{catalog,byId,routes,now}){
+export const PREPARATION_ACTIONS=new Set(['pick','order','equip','recommend']);
+export function applyAction(s,a,config){
+ const {catalog,byId,routes,now}=config;
+ if(a?.preparation!==undefined){
+  requireValid(Array.isArray(a.preparation)&&a.preparation.length<=100,'Demasiados cambios pendientes');
+  for(const edit of a.preparation){requireValid(edit&&PREPARATION_ACTIONS.has(edit.type)&&edit.preparation===undefined,'Preparación inválida');applyAction(s,edit,config);}
+ }
  requireValid(a&&GAME_ACTIONS.has(a.type),'Acción desconocida');const result={};if(a.type==='sync')return result;
  const id=a.type==='open'?a.id:integer(a.id),owned=id=>{const p=byId[id],c=p&&s.collection[p.family];requireValid(c,'Pokémon no capturado');return {p,c};},editable=family=>requireValid(!s.teams.some(t=>t.run?.status==='active'&&t.ids.includes(family)),'Retira el equipo antes de editarlo');
  const team=index=>{requireValid(index<slots(s)&&s.teams[index],'Equipo bloqueado');return s.teams[index];};

@@ -21,3 +21,11 @@ Gimnasios: 18 medallas, Bronce/Plata/Oro, sobres por tipo, una especie exclusiva
 ## Validación
 
 `node --test preliminary/*.test.mjs`. Pruebas de motor, 54 combinaciones de gimnasio/categoría, curación, evoluciones, cuentas aisladas, idempotencia, conflictos entre dispositivos y la interfaz con API y SQLite simulados. Build Vinext verificado en `cloud/`. Autenticación real en móvil y revisión visual pendientes de comprobar con una sesión de usuario.
+
+### v0.13.1 — guardado sin pausas de preparación
+
+Equipo, orden y movimientos se actualizan al instante y agrupan sus comandos tras 2 segundos sin cambios. Iniciar una expedición envía también la preparación pendiente en una sola operación atómica. El servidor valida los movimientos aprendidos, disponibilidad y equipos; no acepta partidas del cliente. Abrir sobres y demás acciones con recompensas siguen siendo autoritativas. Navegación y animación continúan durante el guardado.
+
+Se consulta el resultado al caer un equipo, al regresar a la pestaña y cada 5 minutos si hay expediciones activas. Al ocultar la pestaña se intenta vaciar la preparación pendiente; solo el indicador «Guardado en tu cuenta» confirma su persistencia. Cerrar bruscamente antes de completar el envío puede perder los últimos cambios de preparación. Las expediciones ya confirmadas siguen calculándose offline.
+
+Reintentos usan el mismo identificador y contenido, incluso tras una respuesta perdida. Ante conflicto con otro dispositivo se carga su estado y se descarta la preparación pendiente, con aviso, para no aplicar selecciones antiguas. Las recompensas siguen siendo automáticas, sin botón de reclamar.
