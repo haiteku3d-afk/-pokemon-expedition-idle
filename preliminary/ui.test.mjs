@@ -40,3 +40,11 @@ await click({view:'home'});assert.equal((elements['#app'].innerHTML.match(/class
 await click({action:'more'});assert(elements['#modal'].innerHTML.includes('more-menu'));assert(elements['#modal'].open);await click({view:'wiki'});assert(!elements['#modal'].open);assert(elements['#app'].innerHTML.includes('wiki-topic'));assert(elements['#app'].innerHTML.includes('Equipo recomendado por ruta'));
 await click({view:'teams'});await click({action:'setRoute',id:'0',route:'0'});assert(elements['#modal'].innerHTML.includes('setup-footer'));assert.equal((elements['#modal'].innerHTML.match(/class="order-slot/g)||[]).length,6);
 const visualFixture=stored();visualFixture.packs['gym:0:0']=1;fixture(visualFixture);await click({action:'syncNow'});await click({view:'packs'});assert(elements['#app'].innerHTML.includes('pack-illustration'));assert(elements['#nav'].innerHTML.includes('nav-more'));console.log('PASS atlas, medals, six slots, sticky confirmation, More navigation, wiki and gym packs');
+
+await click({action:'recall',id:'0'});await click({view:'gyms'});elements['#gym-team']={value:'1'};
+await click({action:'gym',id:'2',rank:'0'});assert(elements['#modal'].innerHTML.includes('data-action="gymPrepare"'));assert(!elements['#modal'].innerHTML.includes('data-action="gymBegin"'));
+await click({action:'gymPrepare',id:'2',rank:'0'});assert(elements['#modal'].innerHTML.includes('Gimnasio Fuego · Bronce'));assert(elements['#modal'].innerHTML.includes('Nivel efectivo máximo 12'));assert(elements['#modal'].innerHTML.includes('Índice de gimnasio'));assert(elements['#modal'].innerHTML.includes('data-team="1"'));
+await click({action:'autoTeam',id:'1'});assert(elements['#modal'].innerHTML.includes('Confirmar equipo e iniciar'));
+await click({action:'gymBegin',id:'2',rank:'0',team:'1'});assert.equal(stored().teams[0].run,null);assert.equal(stored().teams[1].run.gymIndex,2);assert.equal(stored().teams[1].run.rank,0);assert(stored().teams[1].run.fighters.every(f=>f.level<=12));
+await click({action:'recall',id:'1'});await click({action:'edit',id:'1'});assert(elements['#modal'].innerHTML.includes('Gimnasio Fuego · Bronce'));
+console.log('PASS gym preview → prepare selected team → recommendation → confirmed gym start and reopening saved destination');
