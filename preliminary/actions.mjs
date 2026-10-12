@@ -1,12 +1,12 @@
-import {ensureMeta,ensureDaily,dailyObjectives,reviveUpgrade,archiveRun} from './progression-meta.mjs';
+import {ensureMeta,ensureDaily,dailyObjectives,reviveUpgrade,archiveRun,summaryKey} from './progression-meta.mjs';
 import {chooseStarter,begin,quickStart,gym,openPacks,slots,ensureMoves,recommendedMoves,gymPackSources,routeUnlocked} from './engine.mjs';
 import {autoEvolve,evolveTo} from './evolution.mjs';
 export const STARTERS=new Set([1,4,7,152,155,158,252,255,258,387,390,393,495,498,501,650,653,656,722,725,728,810,813,816,906,909,912]);
-export const GAME_ACTIONS=new Set(['starter','pick','order','equip','recommend','begin','recall','quick','gymBegin','open','evolveChoice','form','reviveUpgrade','toggleRevive','dailyClaim','sync']);
+export const GAME_ACTIONS=new Set(['starter','pick','order','equip','recommend','begin','recall','quick','gymBegin','open','evolveChoice','form','reviveUpgrade','toggleRevive','dailyClaim','dismissSummary','sync']);
 export class ActionError extends Error {}
 const requireValid=(v,message='Acción no disponible')=>{if(!v)throw new ActionError(message);};
 const integer=v=>{const n=Number(v);requireValid(v!==undefined&&v!==null&&v!==''&&Number.isInteger(n)&&n>=0,'Selección inválida');return n;};
-export const PREPARATION_ACTIONS=new Set(['pick','order','equip','recommend','toggleRevive']);
+export const PREPARATION_ACTIONS=new Set(['pick','order','equip','recommend','toggleRevive','dismissSummary']);
 export function applyAction(s,a,config){
  const {catalog,byId,routes,now}=config;
  if(a?.preparation!==undefined){
@@ -28,6 +28,7 @@ export function applyAction(s,a,config){
  case 'gymBegin':requireValid(gym(s,byId,now,id,integer(a.rank??0),integer(a.team??0)).ok,'Gimnasio o equipo no disponible');break;
  case 'open':{const source=[...routes,...gymPackSources(catalog)].find(r=>String(r.id)===String(id));requireValid(source,'Sobre desconocido');const n=integer(a.count??1);requireValid(n>0&&n<=1000&&(s.packs[source.id]||0)>0,'No hay sobres disponibles');const batch=openPacks(s,source,n);result.batch={count:batch.count,results:batch.results.map(x=>({pokemonId:x.p.id,shiny:x.shiny,level:x.level,result:x.result}))};break;}
  case 'evolveChoice':{const c=s.collection[id];requireValid(c);editable(id);requireValid(evolveTo(c,integer(a.pokemon)),'Evolución no disponible');autoEvolve(c);break;}
+ case 'dismissSummary':{const t=team(id);requireValid(t.run&&t.run.status!=='active'&&a.key===summaryKey(t.run),'El resumen cambió');t.run.summaryDismissed=true;break;}
  case 'reviveUpgrade':{const upgrade=reviveUpgrade(s,id);requireValid(upgrade?.canBuy,'Mejora bloqueada, completada o monedas insuficientes');s.coins-=upgrade.cost;s.secondChance[id]++;result.message='Segunda oportunidad '+(id+1)+': '+s.secondChance[id]*10+'%';break;}
  case 'toggleRevive':{const t=team(id);requireValid(t.run?.status!=='active','La opción se elige antes de salir');requireValid(['true','false'].includes(String(a.enabled)),'Opción inválida');t.autoRevive=String(a.enabled)==='true';break;}
  case 'dailyClaim':{const d=ensureDaily(s,now);requireValid(a.day===d.day,'Las misiones cambiaron de día; revisa las nuevas');requireValid(id<=3&&!d.claimed[id],'Recompensa ya reclamada');const objectives=dailyObjectives(s,now);let source;

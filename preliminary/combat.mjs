@@ -1,5 +1,5 @@
 let MOVES={33:{id:33,name:'Placaje',key:'tackle',type:1,category:2,power:40,accuracy:100,changes:[],minHits:1,maxHits:1}};let CATALOG={};
-export function configureCombat(catalog,moves){CATALOG=Object.fromEntries(catalog.map(p=>[p.id,p]));MOVES=Object.fromEntries(moves.map(m=>[m.id,m]));}
+export function configureCombat(catalog,moves){CATALOG=Object.fromEntries(catalog.map(p=>[p.id,p]));MOVES=Object.fromEntries(moves.map(m=>[m.id,m]));for(const p of catalog){p.nativeLearnset??=(p.learnset||[[1,33]]).map(x=>[...x]);const initial=new Set(p.nativeLearnset.filter(([lv])=>lv<=5).map(([,id])=>id));const hasFuture=p.nativeLearnset.some(([lv,id])=>lv>5&&!initial.has(id));p.trainingMoves=[];p.learnset=p.nativeLearnset.map(x=>[...x]);if(!hasFuture||new Set(p.nativeLearnset.map(([,id])=>id)).size<4){const choices=(p.stats[1]>=p.stats[3]?[98,29,34,70,216,38]:[129,496,161,304,253,497]).filter(id=>MOVES[id]&&!p.nativeLearnset.some(([,own])=>own===id));for(const [i,level] of [10,20,35,50].entries()){const id=choices[i];if(id){p.learnset.push([level,id]);p.trainingMoves.push(id);}}}p.learnset.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);}}
 export const moveById=id=>MOVES[id]||MOVES[165]||MOVES[33];
 export const speciesById=id=>CATALOG[id];
 export function randomRun(s){s.seed=(Math.imul(s.seed,1664525)+1013904223)>>>0;return s.seed/4294967296;}
