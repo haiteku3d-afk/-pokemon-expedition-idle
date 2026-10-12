@@ -63,3 +63,11 @@ Todas las 1.025 especies pueden aprender nuevos movimientos después del nivel 5
 ### v0.14.3 — cierre visible
 
 Todas las ventanas tienen el botón de cerrar en una barra superior, con el contenido desplazable por separado. El resumen sobre una expedición incluye también una barra superior que se mantiene visible al desplazarse por sus compañeros.
+
+### v0.14.4 — ruta antes del equipo y recomendación automática
+
+Preparar expedición abre primero la elección de ruta. Al confirmarla se muestra su presencia de tipos, el equipo editable y una recomendación automática. La salida requiere confirmar equipo y ruta; los cambios pendientes se envían junto al inicio. El servidor valida rutas, espacios, miembros y ocupación, y calcula la misma recomendación que el cliente.
+
+El índice individual estima daño sostenido × supervivencia frente a cada especie desbloqueada, usando movimientos equipados, carga, precisión, estadísticas de nivel/IV, STAB, aura, efectividad/resistencia y curación acotada. Se promedia según la frecuencia real actual de encuentro (uniforme por especie desbloqueada), con un pequeño factor de rapidez del recorrido. El ajuste de tipos se muestra comparando contra el mismo cálculo con efectividades neutrales. Los porcentajes de presencia cuentan ambos tipos de especies dobles.
+
+Se eligen los seis mejores índices individuales, sin imponer cuotas de tipos. Un Pokémon superior puede superar a otro más débil con ventaja de tipo. Los asignados a otros equipos se excluyen; se mantiene la edición manual y el orden de relevo. El índice es aproximado y no simula todos los estados ni cambios de atributos; el PWT general conserva su definición anterior.

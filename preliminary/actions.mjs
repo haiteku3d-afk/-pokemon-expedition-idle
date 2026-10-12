@@ -1,12 +1,13 @@
+import {recommendRouteTeam} from './team-recommendation.mjs';
 import {ensureMeta,ensureDaily,dailyObjectives,reviveUpgrade,archiveRun,summaryKey} from './progression-meta.mjs';
 import {chooseStarter,begin,quickStart,gym,openPacks,slots,ensureMoves,recommendedMoves,gymPackSources,routeUnlocked} from './engine.mjs';
 import {autoEvolve,evolveTo} from './evolution.mjs';
 export const STARTERS=new Set([1,4,7,152,155,158,252,255,258,387,390,393,495,498,501,650,653,656,722,725,728,810,813,816,906,909,912]);
-export const GAME_ACTIONS=new Set(['starter','pick','order','equip','recommend','begin','recall','quick','gymBegin','open','evolveChoice','form','reviveUpgrade','toggleRevive','dailyClaim','dismissSummary','sync']);
+export const GAME_ACTIONS=new Set(['starter','pick','order','equip','recommend','begin','recall','quick','gymBegin','open','evolveChoice','form','reviveUpgrade','toggleRevive','dailyClaim','dismissSummary','setRoute','autoTeam','sync']);
 export class ActionError extends Error {}
 const requireValid=(v,message='Acción no disponible')=>{if(!v)throw new ActionError(message);};
 const integer=v=>{const n=Number(v);requireValid(v!==undefined&&v!==null&&v!==''&&Number.isInteger(n)&&n>=0,'Selección inválida');return n;};
-export const PREPARATION_ACTIONS=new Set(['pick','order','equip','recommend','toggleRevive','dismissSummary']);
+export const PREPARATION_ACTIONS=new Set(['pick','order','equip','recommend','toggleRevive','dismissSummary','setRoute','autoTeam']);
 export function applyAction(s,a,config){
  const {catalog,byId,routes,now}=config;
  if(a?.preparation!==undefined){
@@ -18,11 +19,13 @@ export function applyAction(s,a,config){
  const team=index=>{requireValid(index<slots(s)&&s.teams[index],'Equipo bloqueado');return s.teams[index];};
  switch(a.type){
  case 'starter':requireValid(STARTERS.has(id)&&chooseStarter(s,byId[id]),'Inicial no disponible');break;
+ case 'setRoute':{const t=team(id),r=routes[integer(a.route)];requireValid(!t.run&&r&&routeUnlocked(s,r),'Equipo ocupado o ruta bloqueada');t.plannedRoute=r.id;break;}
+ case 'autoTeam':{const t=team(id),r=routes[t.plannedRoute];requireValid(!t.run&&r&&routeUnlocked(s,r),'Confirma primero una ruta disponible');const recommended=recommendRouteTeam(s,id,r,byId,config.chart||{});requireValid(recommended.ids.length,'No hay Pokémon disponibles');t.ids=recommended.ids;break;}
  case 'pick':{const t=team(id),family=integer(a.family);requireValid(!t.run&&s.collection[family]);if(t.ids.includes(family))t.ids=t.ids.filter(x=>x!==family);else{requireValid(t.ids.length<6&&!s.teams.some((other,i)=>i!==id&&other.ids.includes(family)),'Pokémon ocupado o equipo completo');t.ids.push(family);}break;}
  case 'order':{const t=team(id),index=integer(a.index),direction=Number(a.direction),next=index+direction;requireValid(!t.run&&[-1,1].includes(direction)&&index<t.ids.length&&next>=0&&next<t.ids.length);[t.ids[index],t.ids[next]]=[t.ids[next],t.ids[index]];break;}
  case 'equip':{const {p,c}=owned(id),mid=integer(a.move);editable(p.family);ensureMoves(c,p);requireValid(c.learnedMoves.includes(mid),'Movimiento no aprendido');if(c.equippedMoves.includes(mid)){requireValid(c.equippedMoves.length>1,'Conserva un movimiento');c.equippedMoves=c.equippedMoves.filter(x=>x!==mid);}else{requireValid(c.equippedMoves.length<4,'Máximo cuatro movimientos');c.equippedMoves.push(mid);}c.autoMoves=false;break;}
  case 'recommend':{const {p,c}=owned(id);editable(p.family);c.autoMoves=true;c.equippedMoves=recommendedMoves(c,p);break;}
- case 'begin':{team(id);const r=routes[integer(a.route)];requireValid(r&&begin(s,id,r,byId,now),'No se puede iniciar la expedición');break;}
+ case 'begin':{team(id);const r=routes[integer(a.route)];requireValid(r&&(s.teams[id].plannedRoute===undefined||s.teams[id].plannedRoute===r.id)&&begin(s,id,r,byId,now),'No se puede iniciar la expedición');break;}
  case 'recall':{const t=team(id);archiveRun(t,now);t.run=null;break;}
  case 'quick':{team(id);requireValid(quickStart(s,id,routes,byId,now),'Equipo o destino no disponible');break;}
  case 'gymBegin':requireValid(gym(s,byId,now,id,integer(a.rank??0),integer(a.team??0)).ok,'Gimnasio o equipo no disponible');break;
