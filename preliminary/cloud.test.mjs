@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';import fs from 'node:fs';
 import {testDatabase} from './cloud-test-support.mjs';
 import {handleGameRequest} from './cloud-api.mjs';
 import {configureCombat,makeRoutes,advance} from './engine.mjs';
+import {ensureDaily,recordDaily} from './progression-meta.mjs';
 import {configureEvolution} from './evolution.mjs';
 const read=n=>JSON.parse(fs.readFileSync(new URL(n,import.meta.url))),catalog=read('catalog.json').map(p=>({...p,bst:p.stats.reduce((a,b)=>a+b,0)})),config={catalog,byId:Object.fromEntries(catalog.map(p=>[p.id,p])),routes:makeRoutes(catalog),chart:read('type-chart.json')};configureCombat(catalog,read('moves.json'));configureEvolution(catalog,read('evolutions.json'));
 const db=testDatabase();let now=100000;const user={userId:'alice',displayName:'Alice'},second={userId:'bob',displayName:'Bob'};
@@ -27,6 +28,10 @@ assert.equal(db.sql.prepare('SELECT state FROM players WHERE user_id = ?').get(s
 assert.equal((await command(second,fresh.revision,{type:'sync',preparation:[{type:'pick',id:0,family,preparation:[]}]})).status,400);
 fresh=await (await command(second,fresh.revision,{type:'begin',id:0,route:0,preparation:[{type:'pick',id:0,family},{type:'pick',id:0,family},{type:'recommend',id:7}]})).json();
 assert.equal(fresh.state.teams[0].run.status,'active');assert.equal(fresh.state.collection[family].autoMoves,true);
+// Cloud purchases and daily claims are saved once even if the accepted response is lost.
+let meta=await (await get(second)).json();const fixture=meta.state;fixture.coins=50000;fixture.gymProgress={0:{medal:true,cycles:1,wins:[1,0,0],pity:0},1:{medal:true,cycles:1,wins:[1,0,0],pity:0},2:{medal:true,cycles:1,wins:[1,0,0],pity:0}};fixture.teams[0].run=null;ensureDaily(fixture,now);fixture.daily.leaderMode=false;for(let i=0;i<30;i++)recordDaily(fixture,now,{routeId:0,drop:i<3});db.sql.prepare('UPDATE players SET state = ? WHERE user_id = ?').run(JSON.stringify(fixture),second.userId);
+meta=await (await get(second)).json();const purchaseId=crypto.randomUUID(),purchaseRevision=meta.revision,priorCoins=meta.state.coins;meta=await (await command(second,purchaseRevision,{type:'reviveUpgrade',id:0},purchaseId)).json();assert.equal(meta.state.secondChance[0],1);assert.equal(meta.state.coins,priorCoins-200);const retryPurchase=await (await command(second,purchaseRevision,{type:'reviveUpgrade',id:0},purchaseId)).json();assert.deepEqual(retryPurchase,meta);assert.equal((await command(second,meta.revision,{type:'reviveUpgrade',id:1})).status,400);
+const claimId=crypto.randomUUID(),claimRevision=meta.revision,priorPacks=meta.state.packs[0]||0,day=meta.state.daily.day;meta=await (await command(second,claimRevision,{type:'dailyClaim',id:0,day},claimId)).json();assert.equal(meta.state.packs[0],priorPacks+1);const retryClaim=await (await command(second,claimRevision,{type:'dailyClaim',id:0,day},claimId)).json();assert.deepEqual(retryClaim,meta);assert.equal((await command(second,meta.revision,{type:'dailyClaim',id:0,day})).status,400);assert.equal((await command(second,meta.revision,{type:'dailyClaim',id:1,day,route:10})).status,400);assert.equal((await command(second,meta.revision,{type:'dailyClaim',id:1,day:'1900-01-01',route:0})).status,400);
 // Authenticated write boundary rejects missing custom header and oversized input.
 assert.equal((await handleGameRequest(new Request('https://game.test/api/game',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}),user,db,config,()=>now)).status,403);
 assert.equal((await handleGameRequest(new Request('https://game.test/api/game',{method:'POST',headers:{'Content-Type':'application/json','X-Game-Client':'expedition-v13'},body:'x'.repeat(12001)}),user,db,config,()=>now)).status,413);

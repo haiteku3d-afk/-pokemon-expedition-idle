@@ -29,3 +29,5 @@ img{image-rendering:pixelated}.hero img{image-rendering:pixelated;object-fit:con
 /* Keep navigation above scene/camp layers; reserve iPhone home-indicator space. */
 aside{z-index:100}.shell{position:relative;isolation:isolate}#nav button{touch-action:manipulation}
 @media(max-width:700px){aside{height:calc(65px + env(safe-area-inset-bottom,0px));padding-bottom:calc(5px + env(safe-area-inset-bottom,0px))}.shell{padding-bottom:calc(65px + env(safe-area-inset-bottom,0px))}#nav{justify-content:flex-start;flex-shrink:0}#nav button{flex:0 0 auto;min-height:44px;white-space:nowrap}}
+
+.recovery-setting{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px}.recovery-setting button{padding:8px 10px;font-size:11px}.recovery-card .bar,.daily-card .bar{height:8px}.daily-grid{margin-top:20px}.daily-bonus{margin-top:18px}.daily-value{color:var(--green);font-size:20px}@media(min-width:701px){nav{gap:3px}nav button{padding:10px 14px}aside{overflow-y:auto}}

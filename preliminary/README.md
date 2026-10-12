@@ -37,3 +37,11 @@ Los ticks de combate conservan los botones del menú para no interrumpir los toq
 ### v0.13.3 — controles estables en móvil
 
 El reloj de combate actualiza solamente el contenedor de equipos, sin reconstruir la pantalla ni el menú. Se pausan las actualizaciones visuales durante un toque. La navegación queda en una capa independiente con espacio para el indicador de inicio de iPhone. Los enlaces a JS y CSS llevan la versión real para evitar reutilizar la edición anterior.
+
+### v0.14 — Segunda oportunidad y misiones diarias
+
+Tres recuperaciones permanentes, con probabilidades de 10% a 100% en pasos de 10. Requieren 3/9/18 medallas y completar la anterior al 100%. Coste por compra: 200 × 3^índice × siguiente nivel (1–10); totales 11.000 / 33.000 / 99.000 monedas. Cada equipo puede desactivarlas antes de salir. La partida fija probabilidades al iniciar; cada derrota intenta el siguiente revivir una vez, y si falla termina. Cada éxito recupera al equipo completo sin reducir la dificultad ni reiniciar el gimnasio. Los sorteos offline usan el mismo RNG y orden de eventos que el juego abierto.
+
+Tres misiones por día Chile (America/Santiago): 20 victorias de ruta; 3 sobres encontrados; un líder derrotado, o 30 victorias si empieza el día sin medallas. Recompensas de un sobre por misión, más un bonus de ruta a elección al reclamar las tres. Los objetivos usan los horarios de cada combate offline, las recompensas no reclamadas expiran al renovar y abrir/cobrar sobres no incrementa el objetivo de sobres encontrados. Validación, compra y cobro son autoritativos e idempotentes.
+
+Cada equipo ofrece un resumen del recorrido actual o el último retirado/repetido: duración, victorias, EXP realmente aplicada, monedas, sobres y recuperaciones. Las recompensas de combate permanecen automáticas. Partidas existentes conservan su progreso; las mejoras se aplican a nuevos recorridos.

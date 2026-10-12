@@ -19,7 +19,7 @@ export function createSyncClient({revision,request,accept,preview,notify,changed
    }
    if(!response?.ok){
     if(response?.status===409&&data.state){pending=[];uncertain=null;error=false;accept(data);notify(data.error);return false;}
-    if(response?.status>=400&&response.status<500){pending=[];uncertain=null;error=true;notify(data.error||'Vuelve a sincronizar tu cuenta');return false;}
+    if(response?.status>=400&&response.status<500){pending=[];uncertain=null;error=response.status!==400||operation.action.preparation.length>0;notify(data.error||'Vuelve a sincronizar tu cuenta');return false;}
     throw Error(data?.error||'Sin conexión');
    }
    uncertain=null;error=false;accept(data);
